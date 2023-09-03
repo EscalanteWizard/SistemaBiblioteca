@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <json-c/json.h> INSTALAR LA LIBRERÍA EN EL PROYECTO PARA QUE FUNCIONE
+#include <json-c/json.h> //INSTALAR LA LIBRERÍA EN EL PROYECTO PARA QUE FUNCIONE
 
 
 // Declaración de funciones
@@ -17,6 +17,16 @@ void busquedaAvanzada();
 void prestamoEjemplar();
 void devolucionesEjemplar();
 void IngresarLibro();
+
+struct  {
+  int id;
+  char nombre; // por que nombre es un puntero?  por que es un string largo y no se sabe el tamaño de memoria que va a ocupar
+  char autor; // por que autor no es un puntero?  por que es un string corto y se sabe el tamaño de memoria que va a ocupar
+  int año_publicacion; // por que año_publicacion no es un puntero?  por que es un entero y se sabe el tamaño de memoria que va a ocupar
+  char genero; // por que es un puntero?  por que es un string largo y no se sabe el tamaño de memoria que va a ocupar 
+  char resumen; // por que es un puntero?  por que es un string largo y no se sabe el tamaño de memoria que va a ocupar
+  int disponible; // por que es booleano?  por que es un valor que solo puede ser verdadero o falso
+}Ejemplar;
 
 // Estructura de Libro 
 struct  {
@@ -133,6 +143,8 @@ void opcionesGenerales() {
         
         switch (opcion) {
             case 1:
+                
+
                 busquedaSimple();
                 break;
             case 2:
@@ -187,124 +199,85 @@ void gestionCatalogo() {
 }
 
 void IngresarLibro(char* rutaArchivo){
-    FILE *archivo; //Puntero de tipo FILE
-    struct json_object *obj;
-
-    archivo = fopen(rutaArchivo, "a");
+    FILE *archivo;
+    archivo = fopen(rutaArchivo,"a");
     if(archivo == NULL){
         printf("Error al abrir el archivo");
     }
     else{
-        obj = json_object_new_object();
-
-        //Ingresar datos
         printf("Ingrese el nombre del libro: ");
         scanf("%s", Libro.nombre);
-        printf("Ingrese el nombre del autor: ");
+        printf("Ingrese el autor del libro: ");
         scanf("%s", Libro.autor);
-        printf("Ingrese el año de publicación: ");
+        printf("Ingrese el año de publicación del libro: ");
         scanf("%d", &Libro.anioPublicacion);
         printf("Ingrese el género del libro: ");
         scanf("%s", Libro.genero);
         printf("Ingrese el resumen del libro: ");
         scanf("%s", Libro.resumen);
-        printf("Ingrese la cantidad de libros: ");
+        printf("Ingrese la cantidad de ejemplares del libro: ");
         scanf("%d", &Libro.cantidad);
-
-        //Guardar datos en el archivo
-        json_object_put_string(obj, "nombre", Libro.nombre);
-        json_object_put_string(obj, "autor", Libro.autor);
-        json_object_put_int(obj, "anioPublicacion", Libro.anioPublicacion);
-        json_object_put_string(obj, "genero", Libro.genero);
-        json_object_put_string(obj, "resumen", Libro.resumen);
-        json_object_put_int(obj, "cantidad", Libro.cantidad);
-
-        //limpiar datos
-        fprintf(archivo, "%s\n", json_object_to_json_string(obj)); //Escribir en el archivo
-        json_object_put_string(obj, "nombre", NULL); //Limpiar el objeto
-        json_object_put_string(obj, "autor", NULL); //Limpiar el objeto
-        json_object_put_int(obj, "anioPublicacion", 0); //Limpiar el objeto
-        json_object_put_string(obj, "genero", NULL); //Limpiar el objeto
-        json_object_put_string(obj, "resumen", NULL);   //Limpiar el objeto 
-        json_object_put_int(obj, "cantidad", 0); //Limpiar el objeto
-
-        json_object_put(archivo, "libros", obj); //Limpiar el objeto
-        printf("Datos ingresados correctamente"); //Limpiar el objeto
+        fprintf(archivo, "%s %s %d %s %s %d\n", Libro.nombre, Libro.autor, Libro.anioPublicacion, Libro.genero, Libro.resumen, Libro.cantidad);
+        fclose(archivo);
     }
-    fclose(archivo);
+
+
 }
 
 void IngresarUsuario(char* rutaArchivo){
-    FILE *archivo; //Puntero de tipo FILE
-    struct json_object *obj;
-
-    archivo = fopen(rutaArchivo, "a");
+    FILE *archivo;
+    archivo = fopen(rutaArchivo,"a");
     if(archivo == NULL){
         printf("Error al abrir el archivo");
     }
     else{
-        obj = json_object_new_object();
-
-        //Ingresar datos
-        printf("Ingrese la identificación del usuario: ");
-        scanf("%s", Usuario.identificacion);
         printf("Ingrese el nombre del usuario: ");
         scanf("%s", Usuario.nombre);
+        printf("Ingrese la identificación del usuario: ");
+        scanf("%s", Usuario.identificacion);
         printf("Ingrese la dirección del usuario: ");
         scanf("%s", Usuario.direccion);
-        
-        //guardar datos en el archivo
-        json_object_put_string(obj, "identificacion", Usuario.identificacion);
-        json_object_put_string(obj, "nombre", Usuario.nombre);
-        json_object_put_string(obj, "direccion", Usuario.direccion);
-
-        //limpiar datos
-        fprintf(archivo, "%s\n", json_object_to_json_string(obj)); //Escribir en el archivo
-        json_object_put_string(obj, "identificacion", NULL); //Limpiar el objeto
-        json_object_put_string(obj, "nombre", NULL); //Limpiar el objeto
-        json_object_put_string(obj, "direccion", NULL); //Limpiar el objeto
-        
-        json_object_put(archivo, "usuarios", obj); //Limpiar el objeto
-        printf("Datos ingresados correctamente"); //Limpiar el objeto
+        fprintf(archivo, "%s %s %s\n", Usuario.nombre, Usuario.identificacion, Usuario.direccion);
+        fclose(archivo);
     }
-    fclose(archivo);
+ 
 }
 
-void showHistorial(){
-    FILE *archivo; //Puntero de tipo FILE
-    struct json_object *obj;
-    char inicio[50];
-    char fin[50];
-    char fecha[50];
-    int i = 0;
 
-    archivo = fopen("datosPrestamos.json", "r"); //Abrir el archivo en modo lectura 
+/*
+2.	Implementar una función llamada showHistorial() que permita al usuario ingresar un
+ rango de fechas (inicio y fin) y muestre todos los préstamos generados en ese período.
+*/
+
+void showHistorial(char* rutaArchivo){
+
+    char fechaInicio[50];
+    char fechaFin[50];
+
+    printf("Ingrese la fecha de inicio: ");
+    scanf("%s", fechaInicio);
+    printf("Ingrese la fecha de fin: ");
+    scanf("%s", fechaFin);
+
+    FILE *archivo;
+    archivo = fopen(rutaArchivo,"r");
     if(archivo == NULL){
         printf("Error al abrir el archivo");
     }
     else{
-        obj = json_object_new_object();
-
-        //Ingresar datos
-        printf("Ingrese la fecha de inicio: ");
-        scanf("%s", inicio);
-        printf("Ingrese la fecha de fin: ");
-        scanf("%s", fin);
-
-        //leer datos del archivo e imprimirlos en pantalla y si no hay decir que no hay
-        while(fgets(fecha, 50, archivo) != NULL){
-            if(strcmp(fecha, inicio) >= 0 && strcmp(fecha, fin) <= 0){ //comparar fechas
-                printf("%s", fecha);
-                i++;
+        char linea[100];
+        while(fgets(linea, 100, archivo) != NULL){
+            char *token = strtok(linea, " ");
+            while(token != NULL){
+                if(strcmp(token, fechaInicio) == 0){
+                    printf("%s", linea);
+                }
+                token = strtok(NULL, " ");
             }
         }
-        if(i == 0){
-            printf("No hay datos en el rango de fechas");
-        }
+        fclose(archivo);
     }
-    fclose(archivo);
 }
-
 
 
 void gestionUsuarios() {
@@ -327,10 +300,105 @@ void estadisticas() {
     // Lógica de generación de estadísticas
 }
 
+
 void busquedaSimple() {
     printf("Realizando Búsqueda Simple...\n");
     // Lógica de búsqueda simple
+    struct Libro *libros;
+    int n = 0;
+    char *texto;
+
+    printf("Ingrese el texto de búsqueda: ");
+    scanf("%s", texto);
+
+    
+
+    // Valida el texto de búsqueda
+    if (texto == NULL || strlen(texto) == 0) {
+      printf("Debe ingresar un texto de búsqueda válido.\n");
+      return;
+    }
+
+    // Busca el libro
+    int i = buscar_libro(libros, n, texto);
+
+    // Si el libro no se encontró
+    if (i == -1) {
+      printf("No se encontró el libro.\n");
+      return;
+    }
+
+    // Imprime el libro
+    imprimir_libro(&libros[i]);
 }
+
+// Busca un préstamo por su ID
+int buscar_prestamo(struct Prestamo *prestamos, int n, int id_prestamo) {
+  int i;
+
+  // Recorre los préstamos
+  for (i = 0; i < n; i++) {
+    // Si el ID del préstamo coincide
+    if (prestamos[i].id == id_prestamo) {
+      // Retorna el índice del préstamo
+      return i;
+    }
+  }
+
+  // Si no se encontró el préstamo
+  return -1;
+}
+
+void devolucionesEjemplar(int id_prestamo, char *fecha_devolucion) {
+
+  struct Prestamo *prestamos;
+  int n = 0;
+
+  // Valida la fecha de devolución
+  if (fecha_devolucion == NULL || strlen(fecha_devolucion) == 0) {
+    printf("Debe ingresar una fecha de devolución válida.\n");
+    return;
+  }
+
+  // Busca el préstamo
+  int i = buscar_prestamo(prestamos, n, id_prestamo);
+
+  // Si el préstamo no se encontró
+  if (i == -1) {
+    printf("No se encontró el préstamo.\n");
+    return;
+  }
+
+  // Actualiza la fecha de devolución
+  prestamos[i].fecha_devolucion = fecha_devolucion;
+
+  // Calcula el monto asociado al préstamo
+  int dias = (difftime(fecha_devolucion, prestamos[i].fecha_prestamo) / 86400);
+  int monto = 0;
+
+  // Si el préstamo es de 1 a 7 días
+  if (dias <= 7) {
+    monto = dias * 10;
+  } else {
+    monto = 70;
+  }
+
+  // Imprime el monto asociado al préstamo
+  printf("El monto a pagar es de $%d.\n", monto);
+
+  // Cambia el estado del préstamo a "devuelto"
+  prestamos[i].estado = "Devuelto";
+
+  // Imprime un mensaje de confirmación
+  printf("El ejemplar se ha devuelto correctamente.\n");
+}
+
+
+
+
+
+
+
 
 void busquedaAvanzada() {
     printf("Realizando Búsqueda Avanzada...\n");

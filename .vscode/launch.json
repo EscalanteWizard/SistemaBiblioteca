@@ -2,23 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "C/C++ Runner: Debug Session",
+      "name": "Ejecutar Programa C",
       "type": "cppdbg",
       "request": "launch",
+      "program": "${workspaceFolder}/${fileBasenameNoExtension}",
       "args": [],
       "stopAtEntry": false,
-      "externalConsole": true,
-      "cwd": "C:/MinGW/bin",
-      "program": "C:/Users/henge/Documents/Semestre 2023 II/Lenguajes/SistemaBiblioteca",
-      "MIMode": "C:/MinGW/bin",
-      "miDebuggerPath": "C:/MinGW/bin",
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
       "setupCommands": [
         {
-          "description": "Enable pretty-printing for gdb",
+          "description": "Habilitar la expansión de comandos de GDB",
           "text": "-enable-pretty-printing",
           "ignoreFailures": true
         }
-      ]
+      ],
+      "preLaunchTask": "Compilar con GCC",
+      "miDebuggerPath": "/usr/bin/gcc"
     }
   ]
 }
