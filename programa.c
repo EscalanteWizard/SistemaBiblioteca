@@ -224,10 +224,13 @@ void ingresarLibroJSON(struct Libro libro) {
     char* contenido = leerArchivo("./datosLibros.json");
     // Crear un objeto JSON para el libro
     struct json_object *array = json_object_new_array();
+    struct json_object *libros = json_object_new_array();
 
     //hacer validacion en caso de que el archivos json de libros este vacio
-
-    struct json_object *libros = json_tokener_parse(contenido);
+    if(contenido != NULL ){
+        struct json_object *libros = json_tokener_parse(contenido);
+    }
+    
     printf("LLega");
     for (int i = 0; i < json_object_array_length(libros); i++) {
         struct json_object *libro = json_object_array_get_idx(libros, i);
