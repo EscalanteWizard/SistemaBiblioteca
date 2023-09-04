@@ -230,8 +230,7 @@ void ingresarLibroJSON(struct Libro libro) {
     if(contenido != NULL ){
         struct json_object *libros = json_tokener_parse(contenido);
     }
-    
-    printf("LLega");
+
     for (int i = 0; i < json_object_array_length(libros); i++) {
         struct json_object *libro = json_object_array_get_idx(libros, i);
         json_object_array_add(array, libro);
@@ -730,16 +729,126 @@ void devolucionesEjemplar_aux(char* id_prestamo, char *fecha_devolucion) {
 }
 
 
+void busquedaAvanzadaAuxiliarAnd(char textoBuscarNombre[250],char textoBuscarAutor[250],char textoBuscarGenero[250],char textoBuscarResumen[250],char tecnica[10]){
+    int modoBusqueda; // 0 para contenido, 1 para exacta
+     if(tecnica == "1" || tecnica == '1' || tecnica == 'e' || tecnica == "e" || tecnica == 'E' || tecnica == "E"){
+        modoBusqueda=1;
+     }else{
+        modoBusqueda=0;
+     }
+    Libro *libros = obtenerLibros();
+    int totalLibros = obtenerTotalLibros();
 
+    for (int i = 0; i < totalLibros; i++) {
+        int coincidencia = 0; // Variable para verificar si hubo coincidencia en algún campo
 
+        // Búsqueda por nombre
+        if (modoBusqueda == 0 && ((strstr(libros[i].nombre, textoBuscarNombre) != NULL) && (strstr(libros[i].autor, textoBuscarAutor) != NULL))&& (strstr(libros[i].genero, textoBuscarGenero) != NULL)&& (strstr(libros[i].resumen, textoBuscarResumen) != NULL)) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 &&  ((strstr(libros[i].nombre, textoBuscarNombre) == 0) && (strstr(libros[i].autor, textoBuscarAutor) == 0))&& (strstr(libros[i].genero, textoBuscarGenero) == 0)&& (strstr(libros[i].resumen, textoBuscarResumen) == 0)) {
+            coincidencia = 1;
+        }
+        // Si hubo coincidencia en al menos un campo, mostrar la información del libro
+        if (coincidencia) {
+            printf("\n\n_______________\n");
+            printf("Identificador: %d\n", libros[i].identificador);
+            printf("Nombre: %s\n", libros[i].nombre);
+            printf("Resumen: %s\n", libros[i].resumen);
+            printf("Estado: %s\n", libros[i].cantidad > 0 ? "Disponible" : "No disponible");
+        }
+    }
+}
 
+void busquedaAvanzadaAuxiliarOr(char textoBuscarNombre[250],char textoBuscarAutor[250],char textoBuscarGenero[250],char textoBuscarResumen[250],char tecnica[10]){
+    int modoBusqueda; // 0 para contenido, 1 para exacta
+     if(tecnica == "1" || tecnica == '1' || tecnica == 'e' || tecnica == "e" || tecnica == 'E' || tecnica == "E"){
+        modoBusqueda=1;
+     }else{
+        modoBusqueda=0;
+     }
+    Libro *libros = obtenerLibros();
+    int totalLibros = obtenerTotalLibros();
 
+    for (int i = 0; i < totalLibros; i++) {
+        int coincidencia = 0; // Variable para verificar si hubo coincidencia en algún campo
 
+        // Búsqueda por nombre
+        if (modoBusqueda == 0 && strstr(libros[i].nombre, textoBuscarNombre) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].nombre, textoBuscarNombre) == 0) {
+            coincidencia = 1;
+        }
+
+        // Búsqueda por autor
+        if (modoBusqueda == 0 && strstr(libros[i].autor, textoBuscarAutor) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].autor, textoBuscarAutor) == 0) {
+            coincidencia = 1;
+        }
+
+        // Búsqueda por género
+        if (modoBusqueda == 0 && strstr(libros[i].genero, textoBuscarGenero) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].genero, textoBuscarGenero) == 0) {
+            coincidencia = 1;
+        }
+
+        // Búsqueda por resumen
+        if (modoBusqueda == 0 && strstr(libros[i].resumen, textoBuscarResumen) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].resumen, textoBuscarResumen) == 0) {
+            coincidencia = 1;
+        }
+
+        // Si hubo coincidencia en al menos un campo, mostrar la información del libro
+        if (coincidencia) {
+            printf("\n\n_______________\n");
+            printf("Identificador: %d\n", libros[i].identificador);
+            printf("Nombre: %s\n", libros[i].nombre);
+            printf("Resumen: %s\n", libros[i].resumen);
+            printf("Estado: %s\n", libros[i].cantidad > 0 ? "Disponible" : "No disponible");
+        }
+    }
+}
 
 void busquedaAvanzada() {
     printf("Realizando Búsqueda Avanzada...\n");
-    // Lógica de búsqueda avanzada
+  
+    char textoBuscarNombre[250];
+    char textoBuscarAutor[250];
+    char textoBuscarGenero[250];
+    char textoBuscarResumen[250];
+
+    char tecnica[10];
+    char andOr[10];
+  
+    printf("Ingrese el texto del nombre del libro a buscar....Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarNombre);
+
+    printf("Ingrese el texto del autor del libro a buscar....Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarAutor);
+
+    printf("Ingrese el texto del genero del libro a buscar...Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarGenero);
+
+    printf("Ingrese el texto del resumen del libro a buscar....Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarResumen);
+
+    printf("¿Desea usar el metodo de coincidencia contenida o exacta?....Introduzca 1 o E para exacta, cualquier otro argumento sera para contenido: ");
+    scanf(" %[^\n]s", tecnica);
+
+    printf("¿Desea usar el metodo de busqueda (Y) u (O)?....Introduzca Y para Y (and), cualquier otro argumento sera para o (or): ");
+    scanf(" %[^\n]s", andOr);
+
+    if (andOr == "Y" || andOr == "y" || andOr == 'y' || andOr == 'Y'){
+        printf("Realizando busqueda And");
+        busquedaAvanzadaAuxiliarAnd(textoBuscarNombre,textoBuscarAutor,textoBuscarGenero,textoBuscarResumen,tecnica);
+    }else{
+        printf("Realizando busqueda Or");
+        busquedaAvanzadaAuxiliarOr(textoBuscarNombre,textoBuscarAutor,textoBuscarGenero,textoBuscarResumen,tecnica);
+    }    
 }
+
 
 void prestamoEjemplar() {
     printf("Realizando Préstamo de Ejemplar...\n");
