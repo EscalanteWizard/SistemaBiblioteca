@@ -144,8 +144,6 @@ void opcionesGenerales() {
         
         switch (opcion) {
             case 1:
-                
-
                 busquedaSimple();
                 break;
             case 2:
@@ -221,11 +219,16 @@ char *leerArchivo(char *nombreArchivo) {
 
 // Función para ingresar un libro al archivo JSON
 void ingresarLibroJSON(struct Libro libro) {
+    printf("Ingresando los ejemplares en el archivo JSON...\n");
     //leer el contenido del archivojson
     char* contenido = leerArchivo("./datosLibros.json");
     // Crear un objeto JSON para el libro
     struct json_object *array = json_object_new_array();
+
+    //hacer validacion en caso de que el archivos json de libros este vacio
+
     struct json_object *libros = json_tokener_parse(contenido);
+    printf("LLega");
     for (int i = 0; i < json_object_array_length(libros); i++) {
         struct json_object *libro = json_object_array_get_idx(libros, i);
         json_object_array_add(array, libro);
@@ -293,46 +296,62 @@ char *obtenerLinea(const char *texto, int numeroLinea) {
 }
 
 Libro* buscarLibro(char* nombre) {
+    printf("Buscando libros...\n");
+    printf("Leyendo base de datos JSON...\n");
     // Leer el contenido del archivo JSON
     char* contenido = leerArchivo("./datosLibros.json");
-    
-    // Crear un objeto JSON para el libro
-    struct json_object *array = json_object_new_array();
-    struct json_object *libros = json_tokener_parse(contenido);
-    
-    for (int i = 0; i < json_object_array_length(libros); i++) {
-        struct json_object *libro = json_object_array_get_idx(libros, i);
-        json_object_array_add(array, libro);
-    }
+    printf("%s",contenido);
 
-    for (int i = 0; i < json_object_array_length(array); i++) {
-        struct json_object *libro = json_object_array_get_idx(array, i);
-        struct json_object *nombreLibro;
-        struct json_object *autorLibro;
-        struct json_object *anioPublicacionLibro;
-        struct json_object *generoLibro;
-        struct json_object *resumenLibro;
-        struct json_object *cantidadLibro;
+    printf("Verificando el contenido del documento JSON...\n");
+    if (contenido == NULL){
+        printf("El archivo esta vacio..\n");
+        return NULL;
+    }else{
+        if(contenido != NULL && contenido[0]=='\0'){
+            printf("El archivo esta vacio..\n");
+            return NULL;
+        }else{
+            printf("Creando arreglo de objetos JSON...\n");
+            // Crear un objeto JSON para el libro
+            struct json_object *array = json_object_new_array();
+            printf("Creando objetos JSON...\n");
+            struct json_object *libros = json_tokener_parse(contenido);
+        
+            for (int i = 0; i < json_object_array_length(libros); i++) {
+            struct json_object *libro = json_object_array_get_idx(libros, i);
+            json_object_array_add(array, libro);
+            }
 
-        Libro* libroStruct = malloc(sizeof(Libro));
+            for (int i = 0; i < json_object_array_length(array); i++) {
+                struct json_object *libro = json_object_array_get_idx(array, i);
+                struct json_object *nombreLibro;
+                struct json_object *autorLibro;
+                struct json_object *anioPublicacionLibro;
+                struct json_object *generoLibro;
+                struct json_object *resumenLibro;
+                struct json_object *cantidadLibro;
 
-        libroStruct->identificador = json_object_get_int(libro);
-        nombreLibro = json_object_object_get(libro, "nombre");
-        autorLibro = json_object_object_get(libro, "autor");
-        anioPublicacionLibro = json_object_object_get(libro, "anioPublicacion");
-        generoLibro = json_object_object_get(libro, "genero");
-        resumenLibro = json_object_object_get(libro, "resumen");
-        cantidadLibro = json_object_object_get(libro, "cantidad");
+                Libro* libroStruct = malloc(sizeof(Libro));
 
-        libroStruct->nombre = strdup(json_object_get_string(nombreLibro));
-        libroStruct->autor = strdup(json_object_get_string(autorLibro));
-        libroStruct->anioPublicacion = json_object_get_int(anioPublicacionLibro);
-        libroStruct->genero = strdup(json_object_get_string(generoLibro));
-        libroStruct->resumen = strdup(json_object_get_string(resumenLibro));
-        libroStruct->cantidad = json_object_get_int(cantidadLibro);
+                libroStruct->identificador = json_object_get_int(libro);
+                nombreLibro = json_object_object_get(libro, "nombre");
+                autorLibro = json_object_object_get(libro, "autor");
+                anioPublicacionLibro = json_object_object_get(libro, "anioPublicacion");
+                generoLibro = json_object_object_get(libro, "genero");
+                resumenLibro = json_object_object_get(libro, "resumen");
+                cantidadLibro = json_object_object_get(libro, "cantidad");
 
-        if (strcmp(libroStruct->nombre, nombre) == 0) {
-            return libroStruct;
+                libroStruct->nombre = strdup(json_object_get_string(nombreLibro));
+                libroStruct->autor = strdup(json_object_get_string(autorLibro));
+                libroStruct->anioPublicacion = json_object_get_int(anioPublicacionLibro);
+                libroStruct->genero = strdup(json_object_get_string(generoLibro));
+                libroStruct->resumen = strdup(json_object_get_string(resumenLibro));
+                libroStruct->cantidad = json_object_get_int(cantidadLibro);
+
+                if (strcmp(libroStruct->nombre, nombre) == 0) {
+                    return libroStruct;
+                }
+            }
         }
     }
 
@@ -345,6 +364,8 @@ Libro* buscarLibro(char* nombre) {
 void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
     char *contenidoTxt = leerArchivo(rutaTxt);
     char *linea;
+
+    printf("Leyendo archivo txt...\n");
     
     if (contenidoTxt == NULL) {
         printf("No se pudo abrir el archivo de texto.\n");
@@ -356,7 +377,9 @@ void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
     
     linea = obtenerLinea(contenidoTxt, 1);
     int lineaActual = 1;
+    printf("Leyendo lineas del archivo.txt....\n");
     struct Libro libro;
+    printf("Crando structs para los Libros....\n");
 
     // Mientras la línea no sea nula
     while (linea != NULL) {
@@ -389,12 +412,16 @@ void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
             // Guarda la cantidad en la estructura
             libro.cantidad = atoi(token);
 
+            printf("Objetos recuperados del archivo txt...\n");
+
             // Ingresa el libro al archivo JSON
             if (buscarLibro(libro.nombre) == NULL){
-              ingresarLibroJSON(libro);
+                printf("Verificando duplicidad de ejemplares....\n");                
+                ingresarLibroJSON(libro);
+                printf("Ingresando ejemplar en la base de datos json...\n");
             }
         } else {
-            printf("La línea no tiene el formato esperado: %s\n", linea);
+            printf("ERROR!! La línea no tiene el formato esperado: %s\n", linea);
         }
 
         // Lee la siguiente línea
