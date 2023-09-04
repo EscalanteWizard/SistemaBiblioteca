@@ -167,42 +167,17 @@ void opcionesGenerales() {
 }
 
 void gestionCatalogo() {
-    printf("Gestionando Catálogo...\n"); 
-    // Lógica de gestión de catálogo
-    int opcion;
-    do {
-        printf("\n*************************************\n");
-        printf("\n*** Gestión de Catálogo ***\n");
-        printf("1. Ingresar Libro\n");
-        printf("2. Modificar Libro\n");
-        printf("3. Eliminar Libro\n");
-        printf("4. Volver\n");
-        printf("Ingrese su opción: ");
-        scanf("%d", &opcion);
-        
-        switch (opcion) {
-            case 1:
-                char rutaTxt[100];
-                char *rutaJSON = "datosLibros.json";
-                //solicitar ruta
-                printf("Ingrese la dirección del archivo .txt: ");
-                scanf("%s", rutaTxt);
+    printf("\n*************************************\n");
+    printf("\n*** Gestión de Catálogo ***\n");
 
-                IngresarLibroTxt(rutaTxt, rutaJSON);
-                break;
-            case 2:
-                printf("Modificando Libro...\n");
-                break;
-            case 3:
-                printf("Eliminando Libro...\n");
-                break;
-            case 4:
-                printf("Volviendo al Menú Principal...\n");
-                break;
-            default:
-                printf("Opción inválida. Intente nuevamente.\n");
-        }
-    } while (opcion != 4);
+    char rutaTxt[100];
+    char *rutaJSON = "datosLibros.json";
+    
+    //solicitar ruta
+    printf("Ingrese la dirección del archivo .txt: ");
+    scanf("%s", rutaTxt);        
+    
+    IngresarLibroTxt(rutaTxt, rutaJSON);   
 }
 
 // Función para validar el formato de una línea de texto
