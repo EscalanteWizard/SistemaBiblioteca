@@ -274,16 +274,13 @@ char *obtenerLinea(const char *texto, int numeroLinea) {
         }
         finLinea++;
     }
-
     if (encontrado ==0) {
       return NULL;
     }
-
     // Si el número de línea solicitado es mayor que el número de líneas en el texto, o si el texto está vacío, devolvemos NULL.
     if (lineaActual < numeroLinea || *inicioLinea == '\0') {
         return NULL;
     }
-
     // Calculamos la longitud de la línea y la copiamos en una nueva cadena.
     size_t longitudLinea = finLinea - inicioLinea;
     char *linea = malloc(longitudLinea + 1);
@@ -300,9 +297,9 @@ char *obtenerLinea(const char *texto, int numeroLinea) {
 Libro* buscarLibro(char* nombre) {
     printf("Buscando libros...\n");
     printf("Leyendo base de datos JSON...\n");
+
     // Leer el contenido del archivo JSON
     char* contenido = leerArchivo("./datosLibros.json");
-    printf("%s",contenido);
 
     printf("Verificando el contenido del documento JSON...\n");
     if (contenido == NULL){
@@ -384,7 +381,9 @@ void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
     printf("Crando structs para los Libros....\n");
 
     // Mientras la línea no sea nula
-    while (linea != NULL) {
+    do{
+        printf("%s",linea);//linea de depuracion*************************
+        printf("\n");//linea de depuracion*************************
         // Valida el formato de la línea
         char *copiaLinea = malloc(strlen(linea) + 1);
         strcpy(copiaLinea, linea);
@@ -423,15 +422,12 @@ void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
                 printf("Ingresando ejemplar en la base de datos json...\n");
             }
         } else {
-            printf("ERROR!! La línea no tiene el formato esperado: %s\n", linea);
+            printf("ERROR!! La línea no tiene el formato esperado: %s\n",linea);
         }
-
         // Lee la siguiente línea
         lineaActual++;
         linea = obtenerLinea(contenidoTxt, lineaActual);
-    }
-    
-
+    }while (linea != NULL);
     printf("Se ha procesado el archivo .txt con éxito.\n");
 }
 
@@ -496,7 +492,6 @@ Usuario* buscarUsuario(char* identificacion) {
             return usuarioStruct;
         }
     }
-
     return NULL;
 }
 
