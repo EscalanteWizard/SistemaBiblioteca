@@ -1,0 +1,6 @@
+Cien años de soledad|Gabriel García Márquez|1967|Realismo mágico|Esta novela cuenta la historia|4
+El retrato de Dorian Gray|Oscar Wilde|1890|Novela de terror|Un hombre vende su alma al diablo|1
+1984|George Orwell|1949|Distopía|En un futuro totalitario, el protagonista lucha contra el régimen|3
+El señor de los anillos|J. R. R. Tolkien|1954|Fantasía|Un hobbit debe destruir un anillo mágico|5
+El amor en los tiempos del cólera|Gabriel García Márquez|1985|Realismo mágico|Un hombre espera a su amada|4
+El túnel|Ernesto Sábato|1948|Existencialismo|Un hombre mata a su amante|2
