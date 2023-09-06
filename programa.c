@@ -418,13 +418,6 @@ void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
     printf("Se ha procesado el archivo .txt con éxito.\n");
 }
 
-
-void devolucionesEjemplar() {
-    printf("Realizando Devolución de Ejemplar...\n");
-    // Lógica de devolución de ejemplar
-}
-
-
 void IngresarUsuario(struct Usuario usuario) {
     char* contenido = leerArchivo("./datosUsuarios.json");
     // Crear un objeto JSON para el libro
@@ -628,10 +621,9 @@ int buscar_prestamo(struct Prestamo *prestamos, int n, char* id_prestamo) {
   return -1;
 }
 
-void devolucionesEjemplar_aux(char* id_prestamo, char *fecha_devolucion) {
+void devolucionesEjemplar_aux(char *id_prestamo, char *fecha_devolucion) {
 
-    struct Prestamo *prestamos;
-    //hay que cargar todos los prestamos que estén en los archivos json
+     struct Prestamo *prestamos;
     int n = 0;
 
     // Valida la fecha de devolución
@@ -639,6 +631,9 @@ void devolucionesEjemplar_aux(char* id_prestamo, char *fecha_devolucion) {
         printf("Debe ingresar una fecha de devolución válida.\n");
         return;
     }
+
+    // Obtiene el nombre del archivo JSON
+    char *nombre_archivo = "prestamos.json";
 
     // Busca el préstamo
     int i = buscar_prestamo(prestamos, n, id_prestamo);
@@ -649,30 +644,57 @@ void devolucionesEjemplar_aux(char* id_prestamo, char *fecha_devolucion) {
         return;
     }
 
-    // Actualiza la fecha de devolución
-    //prestamos[i].fecha_devolucion = fecha_devolucion;//funcionará hasta cargar los prestamos
-
     // Calcula el monto asociado al préstamo
-    int dias = 0;
-    //dias = (difftime(fecha_devolucion, prestamos[i].fecha_prestamo) / 86400);
+    int dias = (difftime(fecha_devolucion, prestamos[i].fecha_prestamo) / 86400);
     int monto = 0;
 
-    // Si el préstamo es de 1 a 7 días
-    if (dias <= 7) {
-        monto = dias * 10;
-    } else {
-        monto = 70;
+    switch (dias) {
+        case 1 ... 7:
+            monto = dias * 150;
+            if (dias > 7) {
+                monto += (dias - 7) * 75;
+            }
+            break;
+        case 8 ... 15:
+            monto = 125 * dias;
+            break;
+        default:
+            monto = 100 * dias;
+            break;
     }
 
-    // Imprime el monto asociado al préstamo
-    printf("El monto a pagar es de $%d.\n", monto);
+    //del archivo prestamos.json se debe eliminar el prestamo  y agregarlo al archivo historial.json
+    //leer el contenido del archivo prestamos.json
+    char* contenido = leerArchivo("./prestamos.json");
+    // Crear un objeto JSON para el libro
+    struct json_object *array = json_object_new_array();
+    struct json_object *prestamos = json_tokener_parse(contenido);
 
-    // Cambia el estado del préstamo a "devuelto"
-    // prestamos[i].estado = "Devuelto";
+    // Eliminar el préstamo del JSON de prestamos
+    json_object_array_remove(prestamos, i);
+
+    // Escribir el JSON actualizado
+    json_object_to_file("./prestamos.json", prestamos);
+
+    // Agregar el préstamo al archivo historial.json
+    char* contenidoHistorial = leerArchivo("./historialPrestamos.json");
+    struct json_object *arrayHistorial = json_tokener_parse(contenidoHistorial);
+    struct json_object *prestamo = json_object_new_object();
+    json_object_object_add(prestamo, "id_prestamo", json_object_new_int(prestamos[i].idEjemplar));
+    json_object_object_add(prestamo, "fecha_prestamo", json_object_new_string(prestamos[i].fecha_prestamo));
+    json_object_object_add(prestamo, "fecha_devolucion", json_object_new_string(fecha_devolucion));
+    json_object_object_add(prestamo, "monto", json_object_new_int(monto));
+    json_object_array_add(arrayHistorial, prestamo);
+    json_object_to_file("./historialPrestamos.json", arrayHistorial);
+
+    // Cambiar el estado del préstamo a "devuelto"
+    prestamos[i].estado = "Devuelto";
 
     // Imprime un mensaje de confirmación
     printf("El ejemplar se ha devuelto correctamente.\n");
 }
+
+
 
 void busquedaAvanzada() {
     printf("Realizando Búsqueda Avanzada...\n");
@@ -692,9 +714,9 @@ void prestamoEjemplar() {
     scanf("%s", identificacion);
 
     // Valida el identificador del libro
-    char id_libro[50];
-    printf("Ingrese el identificador del libro: ");
-    scanf("%s", id_libro);
+    char id_Ejemplar[50];
+    printf("Ingrese el identificador ejemplar: ");
+    scanf("%s", id_Ejemplar);
 
     // Valida la fecha de préstamo
     char fecha_prestamo[50];
@@ -716,7 +738,7 @@ void prestamoEjemplar() {
     }
 
     // Busca el libro
-    struct Libro *libro = buscarLibro(id_libro);
+    struct Libro *libro = buscarLibro(id_Ejemplar);
 
     // Si el libro no se encontró
     if (libro == NULL) {
@@ -724,7 +746,7 @@ void prestamoEjemplar() {
         return;
     }
 
-    if(buscar_prestamo(prestamos, 0, id_libro) != -1){
+    if(buscar_prestamo(prestamos, 0, id_Ejemplar) != -1){
       printf("El libro ya está prestado");
       return;
     }
@@ -740,11 +762,11 @@ void prestamoEjemplar() {
     }
 
     struct json_object *jobj = json_object_new_object(); //crea el objeto prestamo
-    json_object_object_add(jobj, "identificadorUsuario", json_object_new_int(usuario->identificacion));
-    json_object_object_add(jobj, "estado", json_object_new_int(1));
-    json_object_object_add(jobj, "idEjemplar", json_object_new_int(libro->identificador));
-    json_object_object_add(jobj, "fecha_prestamo", json_object_new_string(fecha_prestamo));
-    json_object_object_add(jobj, "fecha_devolucion", json_object_new_string(fecha_devolucion));
+    json_object_object_add(jobj, "identificadorUsuario", json_object_new_int(usuario->identificacion)); // agrega los atributos del prestamo al objeto prestamo
+    json_object_object_add(jobj, "estado", json_object_new_int(1)); // 0 para prestado, 1 para devuelto
+    json_object_object_add(jobj, "idEjemplar", json_object_new_int(libro->identificador)); //identificador del libro
+    json_object_object_add(jobj, "fecha_prestamo", json_object_new_string(fecha_prestamo)); //fecha de prestamo
+    json_object_object_add(jobj, "fecha_devolucion", json_object_new_string(fecha_devolucion)); //fecha de devolucion
 
 
     // Agregar el objeto JSON al arreglo de prestamos
