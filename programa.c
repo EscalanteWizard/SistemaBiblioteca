@@ -754,9 +754,17 @@ void prestamoEjemplar() {
 
     // Imprime un mensaje de confirmación
     printf("El ejemplar se ha prestado correctamente.\n");
-    printf("El usuario %s ha prestado el libro %s.\n", usuario->nombre, libro->nombre);
-    printf("La fecha de préstamo es %s.\n", fecha_prestamo);
+    printf("El usuario es %s.\n", usuario->nombre);
+    printf("La fecha de préstamo es %s.\n", fecha_prestamo); 
     printf("La fecha de devolución es %s.\n", fecha_devolucion);
+    printf("El libro es %s.\n", libro->nombre);
+    printf("Identificador del ejemplar es %d.\n", libro->identificador);
+
+
+    //devolver al menu principal
+
+    return;
     
+
 
 }
