@@ -77,7 +77,12 @@ bool esFormatoFechaValido(const char *fecha) {
     }
     return true;
 }
-
+/*
+*Permite al usuario hacer la devolucion de un ejemplar en prestamo
+*Entradas: EL usuario debe ingresar el id del prestamo
+*Salidas: Realiza la devolucin dle ejemplar
+*Restricciones:el id ingresado debe ser el id de un prestamo realizado
+*/
 void devolucionesEjemplar(){
     int elPrestamo = 0;
     printf("Realizando Devolución de Ejemplar...\n");
@@ -221,7 +226,11 @@ void devolucionesEjemplar(){
 
 
 }
-
+/*
+*Menu de opciones generales, permite al usuario navegar a traves de las opciones generales
+*Entradas: un caracter por teclado
+*Salidas: Una opcion segun la eleccion del usuario
+*Restricciones: EL usuario debe seleccionar una opcion valida*/
 void opcionesGenerales() {
     int opcion;
     
@@ -257,7 +266,11 @@ void opcionesGenerales() {
         }
     } while (opcion != 5);
 }
-
+/*
+*Menu de opciones iniciales, permite al usuario navegar a traves de las opciones principales
+*Entradas: un caracter por teclado
+*Salidas: Una opcion segun la eleccion del usuario
+*Restricciones: EL usuario debe seleccionar una opcion valida*/
 int main() {
     int opcion;
     
@@ -287,9 +300,11 @@ int main() {
     
     return 0;
 }
-
-
-//recibe el id del prestamo en tipo int
+/*
+*Retorna el prestamo cuyo id coincide con el id ingresado como argumento
+*Entradas: Un entero
+*Salidas: El prestamo cuyo id coincide con el argumento de la funcion
+*Restricciones: El argumento debe ser un entero*/
 struct Prestamo * buscarPrestamo(int id_prestamo) {
     FILE *archivo;
     char buffer[5000];
@@ -346,7 +361,12 @@ struct Prestamo * buscarPrestamo(int id_prestamo) {
     }
     return prestamo;
 }
-
+/*
+*Menu de opciones operativas, permite al usuario navegar a traves de las opciones operativas
+*Entradas: un caracter por teclado
+*Salidas: Una opcion segun la eleccion del usuario
+*Restricciones: EL usuario debe seleccionar una opcion valida
+*/
 void opcionesOperativas() {
     int opcion;
     
@@ -386,9 +406,11 @@ void opcionesOperativas() {
         }
     } while (opcion != 6);
 }
-
-
-
+/*
+*Permite al usuario hacer una inclusion en lote desde un txt en una ruta
+*Entradas: UNa ruta de un archivo de texto plano
+*Salidas: Se cargan los libros desde el archivo de texto
+*Restricciones: LA ruta debe ser valida*/
 void gestionCatalogo() {
     printf("Gestionando Catálogo...\n"); 
     // Lógica de gestión de catálogo
@@ -425,8 +447,12 @@ void gestionCatalogo() {
         }
     } while (opcion != 4);
 }
-
-// Función para validar el formato de una línea de texto
+/*
+*Verifica que la linea de texto recibida tenga el formato de tokens divididos por pipes
+*Entradas: Una linea de caracteres
+*Salidas: UN codigo de confirmacion en caso de que la linea tenga el formato deseado
+*Restricciones: EL argumento debe ser una cadena de caracteres
+*/
 int validarFormatoLinea(const char *linea) {
     // Implementa aquí tus propias validaciones de formato
     // En este ejemplo, verificaremos que haya 6 campos separados por '|'
@@ -438,7 +464,11 @@ int validarFormatoLinea(const char *linea) {
     }
     return campos == 6;
 }
-
+/*
+*Lee el contenido de un archivo en la ruta indicada
+*Entradas: Una cadena de caracteres
+*Salidas: Retorna una cadena de caracteres con el contenido del archivo de texto en la rita indicada como argumento
+*Restricciones: EL argumento debe ser la ruta de un archivo de texto*/
 char *leerArchivo(char *nombreArchivo) {
     FILE *archivo = fopen(nombreArchivo, "r");
     if (archivo == NULL) {
@@ -464,8 +494,12 @@ char *leerArchivo(char *nombreArchivo) {
 
     return contenido;
 }
-
-// Función para ingresar un libro al archivo JSON
+/*
+* Guarda el struct libro en el archivo json de libros
+*Enradas: uN struct de libro
+*Salidas: Guarda los datos del struct en el archivo json
+*Restricciones: EL argumento debe ser un struct libro
+*/
 void ingresarLibroJSON(struct Libro libro) {
     //leer el contenido del archivojson
     char* contenido = leerArchivo("./datosLibros.json");
@@ -494,7 +528,12 @@ void ingresarLibroJSON(struct Libro libro) {
     json_object_to_file("./datosLibros.json", array);
     
 }
-
+/*
+* Retorna la linea indicada con el segundo argumento en el archivo indiicado como primer argumento
+*Enradas: Una cadena de texto y un entero
+*Salidas: Del texto recibido devuelve la linea en el numero indicado
+*Restricciones: La linea no debe ser mayor al numero de lineas de la cadena de texto
+*/
 char *obtenerLinea(const char *texto, int numeroLinea) {
     if (numeroLinea <= 0)
         return NULL;
@@ -537,7 +576,12 @@ char *obtenerLinea(const char *texto, int numeroLinea) {
 
     return linea;
 }
-
+/*
+* Devuelve el libro con el nombre indicado
+*Enradas: UNa cadena de texto con el nombre del libro
+*Salidas: EL struct con el libro del nombre buscado
+*Restricciones: El texto recibido debe ser el nombre de un libro del sistema
+*/
 Libro* buscarLibro(char* nombre) {
     // Leer el contenido del archivo JSON
     char* contenido = leerArchivo("./datosLibros.json");
@@ -586,10 +630,12 @@ Libro* buscarLibro(char* nombre) {
 
     return NULL;
 }
-
-
-
-// Función para ingresar libros desde un archivo de texto y almacenarlos en un archivo JSON
+/*
+* Función para ingresar libros desde un archivo de texto y almacenarlos en un archivo JSON
+*Enradas:Una ruta del archivo de texto y la ruta del json
+*Salidas: Gurda los ibros del txt en el json
+*Restricciones:
+*/
 void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
     char *contenidoTxt = leerArchivo(rutaTxt);
     char *linea;
@@ -653,7 +699,12 @@ void IngresarLibroTxt(char *rutaTxt, const char *rutaJSON) {
 
     printf("Se ha procesado el archivo .txt con éxito.\n");
 }
-
+/*
+* Guarda los datos del usuario en un json
+*E: Un struct usuario
+*S: Gurda los datos del usuario recibido en el json
+*R: debe existir el archivo datosUsusarios.json
+*/
 void IngresarUsuario(struct Usuario usuario) {
     char* contenido = leerArchivo("./datosUsuarios.json");
     // Crear un objeto JSON para el libro
@@ -674,7 +725,12 @@ void IngresarUsuario(struct Usuario usuario) {
     // Agregar el objeto JSON al archivo JSON
     json_object_to_file("./datosUsuarios.json", array);
 }
-
+/*
+* BUsca un usuario por su id
+*E: El id del usuario
+*S: Retorna el usuario con ese id
+*R: EL argumento debe ser un char 
+*/
 Usuario* buscarUsuario(char* identificacion) {
     // Leer el contenido del archivo JSON
     char* contenido = leerArchivo("./datosUsuarios.json");
@@ -711,7 +767,12 @@ Usuario* buscarUsuario(char* identificacion) {
 
     return NULL;
 }
-
+/*
+* Guarda los datos del usuario en un json
+*E: LOs datos de los usuarios
+*S: Gurda los datos del usuario recibido en el json
+*R: debe existir el archivo datosUsusarios.json
+*/
 void gestionUsuarios() {
     printf("\n\nRealizando Gestión de Usuarios...\n");
     char identificacion[100];
@@ -829,12 +890,17 @@ Prestamo **obtenerTodosLosPrestamos() {
 
         arregloPrestamos[i] = prestamoStruct;
     }
-
     // Agregar un elemento NULL al final del arreglo para indicar su fin
     arregloPrestamos[numPrestamos] = NULL;
 
     return arregloPrestamos;
 }
+/*
+* MUestra los rprestamos vencidos
+*E: ninguno
+*S: Muestra todos los restamos vencidos o proxios a vencer
+*R: NInguna
+*/
 void vencimientoPrestamos() {
     // Obtener la lista de todos los préstamos
     Prestamo **prestamos = obtenerTodosLosPrestamos();
@@ -896,7 +962,12 @@ void estadisticas() {
     printf("Generando Estadísticas...\n");
     // Lógica de generación de estadísticas
 }
-
+/*
+* Retona una lista de los libros
+*E: ninguna
+*S: Una lista de struct libro
+*R: debe existir el archivo datosLibros.json
+*/
 Libro *obtenerLibros() {
     char* contenido = leerArchivo("./datosLibros.json");
     // Crear un objeto JSON para el libro
@@ -945,7 +1016,12 @@ Libro *obtenerLibros() {
 
     return librosStruct;
 }
-
+/*
+* Cuenta cuantos libros hay en el sistema
+*E: ninguna
+*S: un entero
+*R: ninguna
+*/
 int obtenerTotalLibros() {
     char* contenido = leerArchivo("./datosLibros.json");
     // Crear un objeto JSON para el libro
@@ -953,7 +1029,12 @@ int obtenerTotalLibros() {
     int cantidadLibros = json_object_array_length(libros);
     return cantidadLibros;
 }
-
+/*
+* Busca un libro segun un criterio
+*E: Un texto a buscar
+*S: Los libros cuyos atributos contengan el texto indicado
+*R: ninguna
+*/
 void busquedaSimple() {
   printf("Realizando Búsqueda Simple...\n");
   
@@ -975,6 +1056,12 @@ void busquedaSimple() {
         }
     }
 }
+/*
+* Permite realizar la busqueda avanzada And
+*E: Los datos a buscar y los criterios de busqueda
+*S: Muestra los datos buscados segun el criterio de busqueda
+*R: Los datos deben coincidir con los atributos de los struct
+*/
 void busquedaAvanzadaAuxiliarAnd(char textoBuscarNombre[250],char textoBuscarAutor[250],char textoBuscarGenero[250],char textoBuscarResumen[250],char tecnica[10]){
     int modoBusqueda; // 0 para contenido, 1 para exacta
      if(tecnica == "1" || tecnica == '1' || tecnica == 'e' || tecnica == "e" || tecnica == 'E' || tecnica == "E"){
@@ -1004,7 +1091,12 @@ void busquedaAvanzadaAuxiliarAnd(char textoBuscarNombre[250],char textoBuscarAut
         }
     }
 }
-
+/*
+* Permite realizar la busqueda avanzada Or
+*E: Los datos a buscar y los criterios de busqueda
+*S: Muestra los datos buscados segun el criterio de busqueda
+*R: Los datos deben coincidir con los atributos de los struct
+*/
 void busquedaAvanzadaAuxiliarOr(char textoBuscarNombre[250],char textoBuscarAutor[250],char textoBuscarGenero[250],char textoBuscarResumen[250],char tecnica[10]){
     int modoBusqueda; // 0 para contenido, 1 para exacta
      if(tecnica == "1" || tecnica == '1' || tecnica == 'e' || tecnica == "e" || tecnica == 'E' || tecnica == "E"){
@@ -1056,7 +1148,12 @@ void busquedaAvanzadaAuxiliarOr(char textoBuscarNombre[250],char textoBuscarAuto
         }
     }
 }
-
+/*
+* Permite realizar la busqueda avanzada
+*E: Los datos a buscar y los criterios de busqueda
+*S: Muestra los datos buscados segun el criterio de busqueda
+*R: Los datos deben coincidir con los atributos de los struct
+*/
 void busquedaAvanzada() {
     printf("Realizando Búsqueda Avanzada...\n");
     // Lógica de búsqueda avanzada
@@ -1095,7 +1192,12 @@ void busquedaAvanzada() {
         busquedaAvanzadaAuxiliarOr(textoBuscarNombre,textoBuscarAutor,textoBuscarGenero,textoBuscarResumen,tecnica);
     }    
 }
-
+/*
+* Presmite realizar prestamos de ejemplares
+*E: Los datos del ejemplar y usuario, las fechas
+*S: Se realiza el prestamo
+*R: Las fechas deben ser validas
+*/
 void prestamoEjemplar() {
     printf("Realizando Préstamo de Ejemplar...\n");
 
