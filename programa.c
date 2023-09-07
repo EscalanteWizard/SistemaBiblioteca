@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <json-c/json.h> //INSTALAR LA LIBRERÍA EN EL PROYECTO PARA QUE FUNCIONE
 #include <time.h>
 
@@ -50,6 +51,33 @@ void IngresarLibroTxt();
 Prestamo* buscarPrestamo(int);
 int buscar_prestamo(struct Prestamo *prestamos, int n, char *id_prestamo);
 
+/*
+*Verifica que el formato de las fechas sea el adecuado para el programa
+*Entradas: Una cadena de caracteres
+*Salidas: true para indicar que el formato es el adecuado, false para indicar que no lo es
+*Restricciones: ninguna
+*/
+bool esFormatoFechaValido(const char *fecha) {
+    // Verifica si la longitud de la cadena es exactamente 10 caracteres.
+    if (strlen(fecha) != 10) {
+        return false;
+    }
+
+    // Verifica que los caracteres en las posiciones específicas sean números y los separadores sean guiones (-).
+    for (int i = 0; i < 10; i++) {
+        if (i == 2 || i == 5) {
+            if (fecha[i] != '-') {
+                return false;
+            }
+        } else {
+            if (fecha[i] < '0' || fecha[i] > '9') {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void devolucionesEjemplar(){
     int elPrestamo = 0;
     printf("Realizando Devolución de Ejemplar...\n");
@@ -91,15 +119,15 @@ void devolucionesEjemplar(){
     
     for(i = 0; i < n; i++){
         obj = json_object_array_get_idx(parsed_json, i);
-        json_object_object_get_ex(obj, "id", &id); //extraer el id
+        json_object_object_get_ex(obj, "id", &id); 
         
-        json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); //extraer el usuario
-        json_object_object_get_ex(obj, "estado", &estado); //extraer el usuario
-        json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); //extraer el nombreEjemplar
-        json_object_object_get_ex(obj, "fecha_prestamo", &fecha_prestamo); //extraer el idEjemplar
-        json_object_object_get_ex(obj, "fecha_devolucion", &fecha_devolucion); //extraer la fechaInicio
-        json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); //extraer la fechaFin
-        json_object_object_get_ex(obj, "tardia", &tardia); //extraer el estado
+        json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); 
+        json_object_object_get_ex(obj, "estado", &estado); 
+        json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); 
+        json_object_object_get_ex(obj, "fecha_prestamo", &fecha_prestamo); 
+        json_object_object_get_ex(obj, "fecha_devolucion", &fecha_devolucion); 
+        json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); 
+        json_object_object_get_ex(obj, "tardia", &tardia); 
         
         prestamos[i]->id = json_object_get_int(id);
         prestamos[i]->identificadorUsuario = json_object_get_int(identificadorUsuario);
@@ -290,16 +318,16 @@ struct Prestamo * buscarPrestamo(int id_prestamo) {
     //buscar el prestamo
     for(i = 0; i < n; i++){
         obj = json_object_array_get_idx(parsed_json, i);
-        json_object_object_get_ex(obj, "id", &id); //extraer el id
+        json_object_object_get_ex(obj, "id", &id); 
         
         if(json_object_get_int(id) == id_prestamo){
-            json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); //extraer el usuario
-            json_object_object_get_ex(obj, "estado", &estado); //extraer el usuario
-            json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); //extraer el nombreEjemplar
-            json_object_object_get_ex(obj, "fecha_prestamo", &fecha_prestamo); //extraer el idEjemplar
-            json_object_object_get_ex(obj, "fecha_devolucion", &fecha_devolucion); //extraer la fechaInicio
-            json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); //extraer la fechaFin
-            json_object_object_get_ex(obj, "tardia", &tardia); //extraer el estado
+            json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); 
+            json_object_object_get_ex(obj, "estado", &estado); 
+            json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); 
+            json_object_object_get_ex(obj, "fecha_prestamo", &fecha_prestamo); 
+            json_object_object_get_ex(obj, "fecha_devolucion", &fecha_devolucion); 
+            json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); 
+            json_object_object_get_ex(obj, "tardia", &tardia); 
             
             prestamo->id = json_object_get_int(id);
             prestamo->identificadorUsuario = json_object_get_int(identificadorUsuario);
@@ -549,7 +577,9 @@ Libro* buscarLibro(char* nombre) {
         libroStruct->resumen = strdup(json_object_get_string(resumenLibro));
         libroStruct->cantidad = json_object_get_int(cantidadLibro);
 
-        if (strcmp(libroStruct->nombre, nombre) == 0) {
+        char* identif;
+        sprintf(identif, "%d", libroStruct->identificador);
+        if (strcmp(libroStruct->nombre, nombre) == 0 || strcmp(identif, nombre)) {
             return libroStruct;
         }
     }
@@ -717,14 +747,149 @@ void gestionUsuarios() {
     return;
 }
 
+/*
+ *Mostrar todos los prestamos realizados en un rango de fechas inicio-fin
+ *Entradas: El usuario ingresa las fechas de inicio y fin en formato dd-mm-aa
+ *Salidas: Muestra todos los prestamos realizado en el rango de fechas ingresado
+ *Restricciones: Las fechas indicadas deben tener el formato dd-mm-aa, de lo contrario resulta en error
+ */
 void historialPrestamos() {
-    printf("Mostrando Historial de Préstamos...\n");
-    // Lógica de historial de préstamos
-}
+    char fechaInicio[11];
+    char fechaFinal[11];
 
+    // Solicita al usuario la fecha de inicio y la valida
+    do {
+        printf("Ingrese la fecha de inicio (dd/mm/aaaa): ");
+        scanf("%s", fechaInicio);
+    } while (!esFormatoFechaValido(fechaInicio));
+
+    // Solicita al usuario la fecha final y la valida
+    do {
+        printf("Ingrese la fecha final (dd/mm/aaaa): ");
+        scanf("%s", fechaFinal);
+    } while (!esFormatoFechaValido(fechaFinal));
+
+    // Obtén todos los préstamos
+    Prestamo **prestamos = obtenerTodosLosPrestamos();
+
+    // Itera a través de los préstamos y muestra los que están en el rango de fechas
+    printf("Préstamos en el rango de fechas %s - %s:\n", fechaInicio, fechaFinal);
+    for (int i = 0; prestamos[i] != NULL; i++) {
+        if (strcmp(prestamos[i]->fecha_prestamo, fechaInicio) >= 0 && strcmp(prestamos[i]->fecha_de_entrega, fechaFinal) <= 0) {
+            printf("ID Préstamo: %d\n", prestamos[i]->id);
+            printf("ID Ejemplar: %d\n", prestamos[i]->idEjemplar);
+            printf("ID Usuario: %d\n", prestamos[i]->identificadorUsuario);
+            printf("Estado: %d\n", prestamos[i]->estado);
+            printf("Tardía: %d\n", prestamos[i]->tardia);
+            printf("\n");
+        }
+    }
+
+    // Libera la memoria
+    for (int i = 0; prestamos[i] != NULL; i++) {
+        free(prestamos[i]);
+    }
+    free(prestamos);
+}
+/*
+*Retorna un arreglo con todos los prestamos
+*Entradas: ninguna
+*Salidas: Un arreglo con struct de todos los prestamos
+*Restricciones: Debe existir un archivo json con las estructuras de prestamos generados
+*/
+Prestamo **obtenerTodosLosPrestamos() {
+    // Leer el contenido del archivo JSON
+    char *contenido = leerArchivo("./prestamos.json");
+
+    if (contenido == NULL) {
+        fprintf(stderr, "Error al leer el archivo de préstamos.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Crear un objeto JSON para el archivo completo
+    struct json_object *prestamos = json_tokener_parse(contenido);
+    free(contenido); // Liberar la memoria después de su uso
+
+    int numPrestamos = json_object_array_length(prestamos);
+    Prestamo **arregloPrestamos = malloc((numPrestamos + 1) * sizeof(Prestamo*));
+
+    for (int i = 0; i < numPrestamos; i++) {
+        struct json_object *prestamo = json_object_array_get_idx(prestamos, i);
+
+        Prestamo *prestamoStruct = malloc(sizeof(Prestamo));
+
+        prestamoStruct->id = json_object_get_int(json_object_object_get(prestamo, "id"));
+        prestamoStruct->identificadorUsuario = json_object_get_int(json_object_object_get(prestamo, "identificadorUsuario"));
+        prestamoStruct->estado = json_object_get_int(json_object_object_get(prestamo, "estado"));
+        prestamoStruct->idEjemplar = json_object_get_int(json_object_object_get(prestamo, "idEjemplar"));
+        strcpy(prestamoStruct->fecha_prestamo, json_object_get_string(json_object_object_get(prestamo, "fecha_prestamo")));
+        strcpy(prestamoStruct->fecha_devolucion, json_object_get_string(json_object_object_get(prestamo, "fecha_devolucion")));
+        strcpy(prestamoStruct->fecha_de_entrega, json_object_get_string(json_object_object_get(prestamo, "fecha_de_entrega")));
+        prestamoStruct->tardia = json_object_get_int(json_object_object_get(prestamo, "tardia"));
+
+        arregloPrestamos[i] = prestamoStruct;
+    }
+
+    // Agregar un elemento NULL al final del arreglo para indicar su fin
+    arregloPrestamos[numPrestamos] = NULL;
+
+    return arregloPrestamos;
+}
 void vencimientoPrestamos() {
-    printf("Verificando Vencimiento de Préstamos...\n");
-    // Lógica de vencimiento de préstamos
+    // Obtener la lista de todos los préstamos
+    Prestamo **prestamos = obtenerTodosLosPrestamos();
+
+    // Obtener la fecha actual del sistema
+    time_t t;
+    struct tm *tm_info;
+    time(&t);
+    tm_info = localtime(&t);
+
+    // Calcular la fecha actual más 3 días
+    tm_info->tm_mday += 3;
+    mktime(tm_info);
+
+    // Imprimir los préstamos con fecha de entrega en los próximos 3 días o menos
+    printf("Préstamos con fecha de entrega en los próximos 3 días o menos:\n");
+    for (int i = 0; prestamos[i] != NULL; i++) {
+        // Convertir la fecha de entrega del préstamo al formato dd/mm/aaaa
+        struct tm fechaEntrega;
+        char fechaEntregaStr[11]; // "dd/mm/aaaa" + '\0'
+
+        strcpy(fechaEntregaStr, prestamos[i]->fecha_de_entrega);
+
+        // Extraer el día, el mes y el año
+        int dia, mes, anio;
+        if (sscanf(fechaEntregaStr, "%d/%d/%d", &dia, &mes, &anio) == 3) {
+            fechaEntrega.tm_mday = dia;
+            fechaEntrega.tm_mon = mes - 1; // Ajustar el mes a partir de 0
+            fechaEntrega.tm_year = anio - 1900; // Restar 1900 al año
+            fechaEntrega.tm_hour = 0;
+            fechaEntrega.tm_min = 0;
+            fechaEntrega.tm_sec = 0;
+        } else {
+            fprintf(stderr, "Error en el formato de fecha: %s\n", prestamos[i]->fecha_de_entrega);
+            continue;
+        }
+
+        // Calcular la diferencia de días entre la fecha de entrega y la fecha actual
+        time_t tiempoEntrega = mktime(&fechaEntrega);
+        double diferenciaDias = difftime(tiempoEntrega, t) / (60 * 60 * 24);
+
+        if (diferenciaDias <= 3) {
+            printf("ID Préstamo: %d\n", prestamos[i]->id);
+            printf("ID Usuario: %d\n", prestamos[i]->identificadorUsuario);
+            printf("Fecha de Entrega: %s\n", prestamos[i]->fecha_de_entrega);
+            printf("ID Ejemplar: %d\n", prestamos[i]->idEjemplar);
+            printf("\n");
+        }
+    }
+
+    // Liberar la memoria
+    for (int i = 0; prestamos[i] != NULL; i++) {
+        free(prestamos[i]);
+    }
+    free(prestamos);
 }
 
 void estadisticas() {
@@ -810,14 +975,125 @@ void busquedaSimple() {
         }
     }
 }
+void busquedaAvanzadaAuxiliarAnd(char textoBuscarNombre[250],char textoBuscarAutor[250],char textoBuscarGenero[250],char textoBuscarResumen[250],char tecnica[10]){
+    int modoBusqueda; // 0 para contenido, 1 para exacta
+     if(tecnica == "1" || tecnica == '1' || tecnica == 'e' || tecnica == "e" || tecnica == 'E' || tecnica == "E"){
+        modoBusqueda=1;
+     }else{
+        modoBusqueda=0;
+     }
+    Libro *libros = obtenerLibros();
+    int totalLibros = obtenerTotalLibros();
 
+    for (int i = 0; i < totalLibros; i++) {
+        int coincidencia = 0; // Variable para verificar si hubo coincidencia en algún campo
 
+        // Búsqueda por nombre
+        if (modoBusqueda == 0 && ((strstr(libros[i].nombre, textoBuscarNombre) != NULL) && (strstr(libros[i].autor, textoBuscarAutor) != NULL))&& (strstr(libros[i].genero, textoBuscarGenero) != NULL)&& (strstr(libros[i].resumen, textoBuscarResumen) != NULL)) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 &&  ((strstr(libros[i].nombre, textoBuscarNombre) == 0) && (strstr(libros[i].autor, textoBuscarAutor) == 0))&& (strstr(libros[i].genero, textoBuscarGenero) == 0)&& (strstr(libros[i].resumen, textoBuscarResumen) == 0)) {
+            coincidencia = 1;
+        }
+        // Si hubo coincidencia en al menos un campo, mostrar la información del libro
+        if (coincidencia) {
+            printf("\n\n_______________\n");
+            printf("Identificador: %d\n", libros[i].identificador);
+            printf("Nombre: %s\n", libros[i].nombre);
+            printf("Resumen: %s\n", libros[i].resumen);
+            printf("Estado: %s\n", libros[i].cantidad > 0 ? "Disponible" : "No disponible");
+        }
+    }
+}
 
+void busquedaAvanzadaAuxiliarOr(char textoBuscarNombre[250],char textoBuscarAutor[250],char textoBuscarGenero[250],char textoBuscarResumen[250],char tecnica[10]){
+    int modoBusqueda; // 0 para contenido, 1 para exacta
+     if(tecnica == "1" || tecnica == '1' || tecnica == 'e' || tecnica == "e" || tecnica == 'E' || tecnica == "E"){
+        modoBusqueda=1;
+     }else{
+        modoBusqueda=0;
+     }
+    Libro *libros = obtenerLibros();
+    int totalLibros = obtenerTotalLibros();
 
+    for (int i = 0; i < totalLibros; i++) {
+        int coincidencia = 0; // Variable para verificar si hubo coincidencia en algún campo
+
+        // Búsqueda por nombre
+        if (modoBusqueda == 0 && strstr(libros[i].nombre, textoBuscarNombre) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].nombre, textoBuscarNombre) == 0) {
+            coincidencia = 1;
+        }
+
+        // Búsqueda por autor
+        if (modoBusqueda == 0 && strstr(libros[i].autor, textoBuscarAutor) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].autor, textoBuscarAutor) == 0) {
+            coincidencia = 1;
+        }
+
+        // Búsqueda por género
+        if (modoBusqueda == 0 && strstr(libros[i].genero, textoBuscarGenero) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].genero, textoBuscarGenero) == 0) {
+            coincidencia = 1;
+        }
+
+        // Búsqueda por resumen
+        if (modoBusqueda == 0 && strstr(libros[i].resumen, textoBuscarResumen) != NULL) {
+            coincidencia = 1;
+        } else if (modoBusqueda == 1 && strcmp(libros[i].resumen, textoBuscarResumen) == 0) {
+            coincidencia = 1;
+        }
+
+        // Si hubo coincidencia en al menos un campo, mostrar la información del libro
+        if (coincidencia) {
+            printf("\n\n_______________\n");
+            printf("Identificador: %d\n", libros[i].identificador);
+            printf("Nombre: %s\n", libros[i].nombre);
+            printf("Resumen: %s\n", libros[i].resumen);
+            printf("Estado: %s\n", libros[i].cantidad > 0 ? "Disponible" : "No disponible");
+        }
+    }
+}
 
 void busquedaAvanzada() {
     printf("Realizando Búsqueda Avanzada...\n");
     // Lógica de búsqueda avanzada
+
+    char textoBuscarNombre[250];
+    char textoBuscarAutor[250];
+    char textoBuscarGenero[250];
+    char textoBuscarResumen[250];
+
+    char tecnica[10];
+    char andOr[10];
+
+    printf("Ingrese el texto del nombre del libro a buscar....Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarNombre);
+
+    printf("Ingrese el texto del autor del libro a buscar....Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarAutor);
+
+    printf("Ingrese el texto del genero del libro a buscar...Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarGenero);
+
+    printf("Ingrese el texto del resumen del libro a buscar....Un espacio en blanco significa que no buscara con este criterio: ");
+    scanf(" %[^\n]s", textoBuscarResumen);
+
+    printf("¿Desea usar el metodo de coincidencia contenida o exacta?....Introduzca 1 o E para exacta, cualquier otro argumento sera para contenido: ");
+    scanf(" %[^\n]s", tecnica);
+
+    printf("¿Desea usar el metodo de busqueda (Y) u (O)?....Introduzca Y para Y (and), cualquier otro argumento sera para o (or): ");
+    scanf(" %[^\n]s", andOr);
+
+    if (andOr == "Y" || andOr == "y" || andOr == 'y' || andOr == 'Y'){
+        printf("Realizando busqueda And");
+        busquedaAvanzadaAuxiliarAnd(textoBuscarNombre,textoBuscarAutor,textoBuscarGenero,textoBuscarResumen,tecnica);
+    }else{
+        printf("Realizando busqueda Or");
+        busquedaAvanzadaAuxiliarOr(textoBuscarNombre,textoBuscarAutor,textoBuscarGenero,textoBuscarResumen,tecnica);
+    }    
 }
 
 void prestamoEjemplar() {
@@ -828,9 +1104,9 @@ void prestamoEjemplar() {
     struct Usuario *usuarios;
 
     // Valida la identificación del usuario
-    int identificacion = 0;
+    char* identificacion = malloc(20*sizeof(char));
     printf("Ingrese la identificación del usuario: ");
-    scanf("%d", &identificacion);
+    scanf("%s", identificacion);
 
     // Valida el identificador del libro
     char id_Ejemplar[50];
@@ -848,7 +1124,7 @@ void prestamoEjemplar() {
     scanf("%s", fecha_devolucion);
 
     // Busca el usuario
-    Usuario *usuario = buscarUsuario((char *)identificacion);
+    Usuario *usuario = buscarUsuario(identificacion);
 
     // Si el usuario no se encontró
     if (usuario == NULL) {
@@ -890,22 +1166,36 @@ void prestamoEjemplar() {
     parsed_json = json_tokener_parse(buffer);
     n = json_object_array_length(parsed_json);
 
-    Prestamo* prestamos[n];
-    for(int x = 0; x<n; x++){
+    Prestamo* prestamos[n+1];
+    for(int x = 0; x<(n+1); x++){
         prestamos[x] = malloc(sizeof(Prestamo));
     }
+    for(i = 0; i < n+1; i++){
+        if(i == n){
+            Prestamo* el_prestamo = malloc(sizeof(Prestamo));
+            el_prestamo->id = n+1;
+            el_prestamo->identificadorUsuario = atoi(identificacion);
+            el_prestamo->estado = 1;
+            el_prestamo->idEjemplar = atoi(id_Ejemplar);
+            strcpy(el_prestamo->fecha_prestamo, fecha_prestamo);
+            strcpy(el_prestamo->fecha_devolucion, fecha_devolucion);
+            strcpy(el_prestamo->fecha_de_entrega, " ");
+            el_prestamo->tardia = 0;
+            prestamos[i] = el_prestamo;
+            printf("guardado %d\n", prestamos[i]->id);
+            break;
+        }
 
-    for(i = 0; i < n; i++){
         obj = json_object_array_get_idx(parsed_json, i);
-        json_object_object_get_ex(obj, "id", &id); //extraer el id
+        json_object_object_get_ex(obj, "id", &id); 
         
-        json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); //extraer el usuario
-        json_object_object_get_ex(obj, "estado", &estado); //extraer el usuario
-        json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); //extraer el nombreEjemplar
-        json_object_object_get_ex(obj, "fecha_prestamo", &fechaPrestamo); //extraer el idEjemplar
-        json_object_object_get_ex(obj, "fecha_devolucion", &fechaDevolucion); //extraer la fechaInicio
-        json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); //extraer la fechaFin
-        json_object_object_get_ex(obj, "tardia", &tardia); //extraer el estado
+        json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); 
+        json_object_object_get_ex(obj, "estado", &estado); 
+        json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); 
+        json_object_object_get_ex(obj, "fecha_prestamo", &fechaPrestamo); 
+        json_object_object_get_ex(obj, "fecha_devolucion", &fechaDevolucion); 
+        json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); 
+        json_object_object_get_ex(obj, "tardia", &tardia); 
         
         prestamos[i]->id = json_object_get_int(id);
         prestamos[i]->identificadorUsuario = json_object_get_int(identificadorUsuario);
@@ -915,18 +1205,8 @@ void prestamoEjemplar() {
         strcpy(prestamos[i]->fecha_devolucion, json_object_get_string(fechaDevolucion));
         strcpy(prestamos[i]->fecha_de_entrega, json_object_get_string(fecha_entrega));
         prestamos[i]->tardia = json_object_get_int(tardia);
+        
     }
-    //guardar la lista con el nuevo prestamo
-    Prestamo* el_prestamo = malloc(sizeof(Prestamo));
-    el_prestamo->id = n+1;
-    el_prestamo->identificadorUsuario = identificacion;
-    el_prestamo->estado = 1;
-    el_prestamo->idEjemplar = atoi(id_Ejemplar);
-    strcpy(el_prestamo->fecha_prestamo, fecha_prestamo);
-    strcpy(el_prestamo->fecha_devolucion, fecha_devolucion);
-    strcpy(el_prestamo->fecha_de_entrega, "");
-    el_prestamo->tardia = 0;
-    prestamos[n] = prestamo;
     
     //volver a guardar los prestamos en el json
     struct json_object *json_array = json_object_new_array();
@@ -942,7 +1222,6 @@ void prestamoEjemplar() {
         json_object_object_add(obj, "fecha_entrega", json_object_new_string(prestamos[i]->fecha_de_entrega));
         json_object_object_add(obj, "tardia", json_object_new_int(prestamos[i]->tardia));
 
-
         json_object_array_add(json_array, obj);
    
     }
@@ -957,9 +1236,8 @@ void prestamoEjemplar() {
 
     // Imprime un mensaje de confirmación
     printf("El ejemplar se ha prestado correctamente.\n");
-    printf("El usuario es %d.\n", identificacion);
+    printf("El usuario es %s.\n", identificacion);
     printf("La fecha de préstamo es %s.\n", fecha_prestamo);
     printf("La fecha de devolución es %s.\n", fecha_devolucion);
     printf("El id del ejemplar es %s.\n", id_Ejemplar);
 }
-
