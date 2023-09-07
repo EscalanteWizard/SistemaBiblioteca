@@ -24,6 +24,7 @@ typedef struct Usuario  {
 
 //Estructura de Prestamo
 typedef struct Prestamo  {
+    int id;
     int identificadorUsuario;
     int estado; //0 para prestado, 1 para devuelto
     int idEjemplar; //identificador del libro
@@ -46,8 +47,188 @@ void busquedaSimple();
 void busquedaAvanzada();
 void prestamoEjemplar();
 void IngresarLibroTxt();
-void devolucionesEjemplar_aux(char *id_prestamo, char *fecha_devolucion);
+Prestamo* buscarPrestamo(int);
 int buscar_prestamo(struct Prestamo *prestamos, int n, char *id_prestamo);
+
+void devolucionesEjemplar(){
+    int elPrestamo = 0;
+    printf("Realizando Devolución de Ejemplar...\n");
+    printf("Ingrese el id del prestamo: ");
+    scanf("%d", &elPrestamo);
+
+    if(buscarPrestamo(elPrestamo) == NULL){
+        printf("No se encontró el prestamo");
+        return;
+    }
+
+    //leer prestamos y guardar en lista de prestamos
+    FILE *archivo;
+    char buffer[5000];
+
+    struct json_object *parsed_json;
+    struct json_object *obj;
+
+    struct json_object *id;
+    struct json_object *identificadorUsuario;
+    struct json_object *estado;
+    struct json_object *idEjemplar;
+    struct json_object *fecha_prestamo;
+    struct json_object *fecha_devolucion;
+    struct json_object *fecha_entrega;
+    struct json_object *tardia;
+    size_t n,i;
+    archivo = fopen("./prestamos.json", "r"); 
+    fread(buffer, 5000, 1, archivo);
+    fclose(archivo);
+
+    parsed_json = json_tokener_parse(buffer);
+    n = json_object_array_length(parsed_json);
+
+    Prestamo* prestamos[n];
+    for(int x = 0; x<n; x++){
+        prestamos[x] = malloc(sizeof(Prestamo));
+    }
+    
+    for(i = 0; i < n; i++){
+        obj = json_object_array_get_idx(parsed_json, i);
+        json_object_object_get_ex(obj, "id", &id); //extraer el id
+        
+        json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); //extraer el usuario
+        json_object_object_get_ex(obj, "estado", &estado); //extraer el usuario
+        json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); //extraer el nombreEjemplar
+        json_object_object_get_ex(obj, "fecha_prestamo", &fecha_prestamo); //extraer el idEjemplar
+        json_object_object_get_ex(obj, "fecha_devolucion", &fecha_devolucion); //extraer la fechaInicio
+        json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); //extraer la fechaFin
+        json_object_object_get_ex(obj, "tardia", &tardia); //extraer el estado
+        
+        prestamos[i]->id = json_object_get_int(id);
+        prestamos[i]->identificadorUsuario = json_object_get_int(identificadorUsuario);
+        prestamos[i]->estado = json_object_get_int(estado);
+        prestamos[i]->idEjemplar = json_object_get_int(idEjemplar);
+        strcpy(prestamos[i]->fecha_prestamo, json_object_get_string(fecha_prestamo));
+        strcpy(prestamos[i]->fecha_devolucion, json_object_get_string(fecha_devolucion));
+        strcpy(prestamos[i]->fecha_de_entrega, json_object_get_string(fecha_entrega));
+        prestamos[i]->tardia = json_object_get_int(tardia);
+    }
+
+    //buscar el prestamo en el array
+    int precio = 0;
+    for(i = 0; i < n; i++){
+        if(prestamos[i]->id == elPrestamo){
+            //hacer la edicion 
+            time_t t = time(NULL);
+
+            // Convertimos el tiempo a una estructura tm
+            struct tm *tm = localtime(&t);
+
+            // Reservamos memoria para la cadena de caracteres
+            char *fecha = malloc(sizeof(char) * 20);
+
+            // Formateamos la fecha
+            strftime(fecha, 20, "%d/%m/%Y", tm);
+
+            strcpy(prestamos[i]->fecha_de_entrega, fecha);
+            prestamos[i]->estado = 0; //entregado
+            //ver tardia comparando si la fecha de entrega es mayor a la fecha de devolucion
+            //calcular el precio
+            int tarde = strcmp(prestamos[i]->fecha_de_entrega, prestamos[i]->fecha_devolucion);
+                
+            if(tarde > 0){
+                prestamos[i]->tardia = 1; //tardia
+                if(tarde <= 7){
+                    precio += tarde*75;
+                }
+                else if(tarde <= 15){
+                    precio += tarde*50;
+                }
+                else{
+                    precio += tarde*25;
+                }
+            }
+            else{
+                prestamos[i]->tardia = 0; //no tardia
+            }
+            int dias = strcmp(prestamos[i]->fecha_prestamo, prestamos[i]->fecha_devolucion);
+            if(dias <= 7){
+                precio += dias*150;
+            }
+            else if(dias <= 15){
+                precio += dias*125;
+            }
+            else{
+                precio += dias*100;
+            }
+            break;
+        }
+    }
+
+    printf("Se ha realizado la devolución del ejemplar con éxito.\n");
+    printf("El precio del préstamo es: %d\n", precio);
+    printf("Gracias por usar nuestro servicio.\n");
+
+    //volver a guardar los prestamos en el json
+    struct json_object *json_array = json_object_new_array();
+
+    for(int i = 0; i < n; i++){
+        struct json_object *obj = json_object_new_object();
+        json_object_object_add(obj, "id", json_object_new_int(prestamos[i]->id)); 
+        json_object_object_add(obj, "identificadorUsuario", json_object_new_int(prestamos[i]->identificadorUsuario));
+        json_object_object_add(obj, "estado", json_object_new_int(prestamos[i]->estado));
+        json_object_object_add(obj, "idEjemplar", json_object_new_int(prestamos[i]->idEjemplar));
+        json_object_object_add(obj, "fecha_prestamo", json_object_new_string(prestamos[i]->fecha_prestamo));
+        json_object_object_add(obj, "fecha_devolucion", json_object_new_string(prestamos[i]->fecha_devolucion));
+        json_object_object_add(obj, "fecha_entrega", json_object_new_string(prestamos[i]->fecha_de_entrega));
+        json_object_object_add(obj, "tardia", json_object_new_int(prestamos[i]->tardia));
+
+        json_object_array_add(json_array, obj);   
+    }
+    
+    const char *json_str = json_object_to_json_string(json_array);
+
+    FILE *file = fopen("./prestamos.json", "w");
+    if (file) {
+        fprintf(file, "%s", json_str);
+        fclose(file);
+    }
+
+
+}
+
+void opcionesGenerales() {
+    int opcion;
+    
+    do {
+	printf("\n*************************************\n");
+        printf("\n*** Opciones Generales ***\n");
+        printf("1. Búsqueda Simple\n");
+        printf("2. Búsqueda Avanzada\n");
+        printf("3. Préstamo de Ejemplar\n");
+        printf("4. Devolución de Ejemplar\n");
+        printf("5. Volver\n");
+        printf("Ingrese su opción: ");
+        scanf("%d", &opcion);
+        
+        switch (opcion) {
+            case 1:
+                busquedaSimple();
+                break;
+            case 2:
+                busquedaAvanzada();
+                break;
+            case 3:
+                prestamoEjemplar();
+                break;
+            case 4:
+                devolucionesEjemplar();
+                break;
+            case 5:
+                printf("Volviendo al Menú Principal...\n");
+                break;
+            default:
+                printf("Opción inválida. Intente nuevamente.\n");
+        }
+    } while (opcion != 5);
+}
 
 int main() {
     int opcion;
@@ -77,6 +258,65 @@ int main() {
     } while (opcion != 3);
     
     return 0;
+}
+
+
+//recibe el id del prestamo en tipo int
+struct Prestamo * buscarPrestamo(int id_prestamo) {
+    FILE *archivo;
+    char buffer[5000];
+
+    struct json_object *parsed_json;
+    struct json_object *obj;
+
+    struct json_object *id;
+    struct json_object *identificadorUsuario;
+    struct json_object *estado;
+    struct json_object *idEjemplar;
+    struct json_object *fecha_prestamo;
+    struct json_object *fecha_devolucion;
+    struct json_object *fecha_entrega;
+    struct json_object *tardia;
+    size_t n,i;
+    archivo = fopen("./prestamos.json", "r"); 
+    fread(buffer, 5000, 1, archivo);
+    fclose(archivo);
+
+    parsed_json = json_tokener_parse(buffer);
+    n = json_object_array_length(parsed_json);
+
+    Prestamo* prestamo = malloc(sizeof(Prestamo));
+    int encontrado;
+    //buscar el prestamo
+    for(i = 0; i < n; i++){
+        obj = json_object_array_get_idx(parsed_json, i);
+        json_object_object_get_ex(obj, "id", &id); //extraer el id
+        
+        if(json_object_get_int(id) == id_prestamo){
+            json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); //extraer el usuario
+            json_object_object_get_ex(obj, "estado", &estado); //extraer el usuario
+            json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); //extraer el nombreEjemplar
+            json_object_object_get_ex(obj, "fecha_prestamo", &fecha_prestamo); //extraer el idEjemplar
+            json_object_object_get_ex(obj, "fecha_devolucion", &fecha_devolucion); //extraer la fechaInicio
+            json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); //extraer la fechaFin
+            json_object_object_get_ex(obj, "tardia", &tardia); //extraer el estado
+            
+            prestamo->id = json_object_get_int(id);
+            prestamo->identificadorUsuario = json_object_get_int(identificadorUsuario);
+            prestamo->estado = json_object_get_int(estado);
+            prestamo->idEjemplar = json_object_get_int(idEjemplar);
+            strcpy(prestamo->fecha_prestamo, json_object_get_string(fecha_prestamo));
+            strcpy(prestamo->fecha_devolucion, json_object_get_string(fecha_devolucion));
+            strcpy(prestamo->fecha_de_entrega, json_object_get_string(fecha_entrega));
+            prestamo->tardia = json_object_get_int(tardia);
+
+            encontrado = 1;
+        }
+    }
+    if(encontrado == 0){
+        return NULL;
+    }
+    return prestamo;
 }
 
 void opcionesOperativas() {
@@ -119,41 +359,7 @@ void opcionesOperativas() {
     } while (opcion != 6);
 }
 
-void opcionesGenerales() {
-    int opcion;
-    
-    do {
-	printf("\n*************************************\n");
-        printf("\n*** Opciones Generales ***\n");
-        printf("1. Búsqueda Simple\n");
-        printf("2. Búsqueda Avanzada\n");
-        printf("3. Préstamo de Ejemplar\n");
-        printf("4. Devolución de Ejemplar\n");
-        printf("5. Volver\n");
-        printf("Ingrese su opción: ");
-        scanf("%d", &opcion);
-        
-        switch (opcion) {
-            case 1:
-                busquedaSimple();
-                break;
-            case 2:
-                busquedaAvanzada();
-                break;
-            case 3:
-                prestamoEjemplar();
-                break;
-            case 4:
-                devolucionesEjemplar();
-                break;
-            case 5:
-                printf("Volviendo al Menú Principal...\n");
-                break;
-            default:
-                printf("Opción inválida. Intente nuevamente.\n");
-        }
-    } while (opcion != 5);
-}
+
 
 void gestionCatalogo() {
     printf("Gestionando Catálogo...\n"); 
@@ -605,46 +811,26 @@ void busquedaSimple() {
     }
 }
 
- /**struct Prestamo* buscarPrestamo(char* id_ejemplar, char* fecha_devolucion) {
 
-  // Leer el contenido del archivo JSON
-  char* contenido = leerArchivo("./prestamos.json");
 
-  // Crear un objeto JSON para el préstamo
-  struct json_object *array = json_tokener_parse(contenido);
 
-  // Recorrer los préstamos
-  for (int i = 0; i < json_object_array_length(array); i++) {
-    // Obtener el id_ejemplar y la fecha de devolución del préstamo
-    struct json_object *prestamo = json_object_array_get_idx(array, i);
-    char* id_ejemplar_json = json_object_get_string(json_object_object_get(prestamo, "id_ejemplar"));
-    char* fecha_devolucion_json = json_object_get_string(json_object_object_get(prestamo, "fecha_devolucion"));
-
-    // Si el id_ejemplar y la fecha de devolución coinciden, retornar el préstamo
-    if (strcmp(id_ejemplar_json, id_ejemplar) == 0 && strcmp(fecha_devolucion_json, fecha_devolucion) == 0) {
-      return (struct Prestamo*)prestamo;
-    }
-  }
-
-  // Si no se encontró el préstamo
-  return NULL;
-}*/
 
 void busquedaAvanzada() {
     printf("Realizando Búsqueda Avanzada...\n");
     // Lógica de búsqueda avanzada
 }
+
 void prestamoEjemplar() {
     printf("Realizando Préstamo de Ejemplar...\n");
 
-    struct Prestamo *prestamos;
+    struct Prestamo *prestamo;
     struct Libro *libros;
     struct Usuario *usuarios;
 
     // Valida la identificación del usuario
-    char identificacion[50];
+    int identificacion = 0;
     printf("Ingrese la identificación del usuario: ");
-    scanf("%s", identificacion);
+    scanf("%d", &identificacion);
 
     // Valida el identificador del libro
     char id_Ejemplar[50];
@@ -652,17 +838,17 @@ void prestamoEjemplar() {
     scanf("%s", id_Ejemplar);
 
     // Valida la fecha de préstamo
-    char fecha_prestamo[50];
+    char* fecha_prestamo = malloc(50*sizeof(char));
     printf("Ingrese la fecha de préstamo (dd/mm/aaaa): ");
     scanf("%s", fecha_prestamo);
 
     // Valida la fecha de devolución
-    char fecha_devolucion[50];
+    char *fecha_devolucion = malloc(50*sizeof(char));
     printf("Ingrese la fecha de devolución (dd/mm/aaaa): ");
     scanf("%s", fecha_devolucion);
 
     // Busca el usuario
-    struct Usuario *usuario = buscarUsuario(identificacion);
+    Usuario *usuario = buscarUsuario((char *)identificacion);
 
     // Si el usuario no se encontró
     if (usuario == NULL) {
@@ -671,7 +857,7 @@ void prestamoEjemplar() {
     }
 
     // Busca el libro
-    struct Libro *libro = buscarLibro(id_Ejemplar);
+    Libro *libro = buscarLibro(id_Ejemplar);
 
     // Si el libro no se encontró
     if (libro == NULL) {
@@ -679,37 +865,99 @@ void prestamoEjemplar() {
         return;
     }
 
-    if(buscar_prestamo(prestamos, 0, id_Ejemplar) != -1){
-      printf("El libro ya está prestado");
-      return;
+    //realizar el prestamo
+    
+    //leer prestamos y guardar en lista de prestamos
+    FILE *archivo;
+    char buffer[5000];
+
+    struct json_object *parsed_json;
+    struct json_object *obj;
+
+    struct json_object *id;
+    struct json_object *identificadorUsuario;
+    struct json_object *estado;
+    struct json_object *idEjemplar;
+    struct json_object *fechaPrestamo;
+    struct json_object *fechaDevolucion;
+    struct json_object *fecha_entrega;
+    struct json_object *tardia;
+    size_t n,i;
+    archivo = fopen("./prestamos.json", "r"); 
+    fread(buffer, 5000, 1, archivo);
+    fclose(archivo);
+
+    parsed_json = json_tokener_parse(buffer);
+    n = json_object_array_length(parsed_json);
+
+    Prestamo* prestamos[n];
+    for(int x = 0; x<n; x++){
+        prestamos[x] = malloc(sizeof(Prestamo));
     }
 
-    char* contenido = leerArchivo("./prestamos.json");
-
-    // Crear un objeto JSON para el libro
-    struct json_object *array = json_object_new_array(); //array de prestamos
-    struct json_object *prestamo = json_tokener_parse(contenido); //prestamos
-    for (int i = 0; i < json_object_array_length(prestamo); i++) { //recorre los prestamos
-        struct json_object *prestamoTem = json_object_array_get_idx(prestamo, i); //obtiene el prestamo
-        json_object_array_add(array, prestamoTem); //agrega el prestamo al array
+    for(i = 0; i < n; i++){
+        obj = json_object_array_get_idx(parsed_json, i);
+        json_object_object_get_ex(obj, "id", &id); //extraer el id
+        
+        json_object_object_get_ex(obj, "identificadorUsuario", &identificadorUsuario); //extraer el usuario
+        json_object_object_get_ex(obj, "estado", &estado); //extraer el usuario
+        json_object_object_get_ex(obj, "idEjemplar", &idEjemplar); //extraer el nombreEjemplar
+        json_object_object_get_ex(obj, "fecha_prestamo", &fechaPrestamo); //extraer el idEjemplar
+        json_object_object_get_ex(obj, "fecha_devolucion", &fechaDevolucion); //extraer la fechaInicio
+        json_object_object_get_ex(obj, "fecha_entrega", &fecha_entrega); //extraer la fechaFin
+        json_object_object_get_ex(obj, "tardia", &tardia); //extraer el estado
+        
+        prestamos[i]->id = json_object_get_int(id);
+        prestamos[i]->identificadorUsuario = json_object_get_int(identificadorUsuario);
+        prestamos[i]->estado = json_object_get_int(estado);
+        prestamos[i]->idEjemplar = json_object_get_int(idEjemplar);
+        strcpy(prestamos[i]->fecha_prestamo, json_object_get_string(fechaPrestamo));
+        strcpy(prestamos[i]->fecha_devolucion, json_object_get_string(fechaDevolucion));
+        strcpy(prestamos[i]->fecha_de_entrega, json_object_get_string(fecha_entrega));
+        prestamos[i]->tardia = json_object_get_int(tardia);
     }
+    //guardar la lista con el nuevo prestamo
+    Prestamo* el_prestamo = malloc(sizeof(Prestamo));
+    el_prestamo->id = n+1;
+    el_prestamo->identificadorUsuario = identificacion;
+    el_prestamo->estado = 1;
+    el_prestamo->idEjemplar = atoi(id_Ejemplar);
+    strcpy(el_prestamo->fecha_prestamo, fecha_prestamo);
+    strcpy(el_prestamo->fecha_devolucion, fecha_devolucion);
+    strcpy(el_prestamo->fecha_de_entrega, "");
+    el_prestamo->tardia = 0;
+    prestamos[n] = prestamo;
+    
+    //volver a guardar los prestamos en el json
+    struct json_object *json_array = json_object_new_array();
 
-    struct json_object *jobj = json_object_new_object(); //crea el objeto prestamo
-    json_object_object_add(jobj, "identificadorUsuario", json_object_new_int(atoi(usuario->identificacion))); // agrega los atributos del prestamo al objeto prestamo
-    json_object_object_add(jobj, "estado", json_object_new_int(1)); // 0 para prestado, 1 para devuelto
-    json_object_object_add(jobj, "idEjemplar", json_object_new_int(libro->identificador)); //identificador del libro
-    json_object_object_add(jobj, "fecha_prestamo", json_object_new_string(fecha_prestamo)); //fecha de prestamo
-    json_object_object_add(jobj, "fecha_devolucion", json_object_new_string(fecha_devolucion)); //fecha de devolucion
+    for(int i = 0; i < n+1; i++){
+        struct json_object *obj = json_object_new_object();
+        json_object_object_add(obj, "id", json_object_new_int(prestamos[i]->id)); 
+        json_object_object_add(obj, "identificadorUsuario", json_object_new_int(prestamos[i]->identificadorUsuario));
+        json_object_object_add(obj, "estado", json_object_new_int(prestamos[i]->estado));
+        json_object_object_add(obj, "idEjemplar", json_object_new_int(prestamos[i]->idEjemplar));
+        json_object_object_add(obj, "fecha_prestamo", json_object_new_string(prestamos[i]->fecha_prestamo));
+        json_object_object_add(obj, "fecha_devolucion", json_object_new_string(prestamos[i]->fecha_devolucion));
+        json_object_object_add(obj, "fecha_entrega", json_object_new_string(prestamos[i]->fecha_de_entrega));
+        json_object_object_add(obj, "tardia", json_object_new_int(prestamos[i]->tardia));
 
 
-    // Agregar el objeto JSON al arreglo de prestamos
-    json_object_array_add(array, jobj);
-    // Agregar el objeto JSON al archivo JSON
-    json_object_to_file("./prestamos.json", array);
+        json_object_array_add(json_array, obj);
+   
+    }
+    
+    const char *json_str = json_object_to_json_string(json_array);
+
+    FILE *file = fopen("./prestamos.json", "w");
+    if (file) {
+        fprintf(file, "%s", json_str);
+        fclose(file);
+    }
 
     // Imprime un mensaje de confirmación
     printf("El ejemplar se ha prestado correctamente.\n");
-    printf("El usuario es %s.\n", identificacion);
+    printf("El usuario es %d.\n", identificacion);
     printf("La fecha de préstamo es %s.\n", fecha_prestamo);
     printf("La fecha de devolución es %s.\n", fecha_devolucion);
     printf("El id del ejemplar es %s.\n", id_Ejemplar);
